@@ -1,0 +1,17 @@
+# Scraped data & generated artifacts (regenerate via the pipeline in README)
+cvpr*.json
+cvpr*.csv
+cvpr*.npz
+cvpr*.txt
+*.bak.*
+charts/
+
+# Python
+__pycache__/
+*.pyc
+
+# Editor / OS / local agent config
+.DS_Store
+.claude/
+.vscode/
+.idea/

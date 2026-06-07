@@ -1,0 +1,10 @@
+# Core
+numpy
+sentence-transformers      # embeddings (all-MiniLM-L6-v2)
+scikit-learn               # KMeans clustering, TF-IDF labels
+plotly                     # interactive charts
+networkx                   # concept co-occurrence network (chart 04)
+
+# Optional
+umap-learn                 # nicer 2D map projection (falls back to t-SNE / PCA)
+kaleido                    # static PNG export (build_dashboard.py --images)
