@@ -5,6 +5,7 @@ cvpr*.npz
 cvpr*.txt
 *.bak.*
 charts/
+medium/
 
 # Python
 __pycache__/
