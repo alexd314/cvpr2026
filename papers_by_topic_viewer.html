@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CVPR 2026 Papers by Topic</title>
+  <style>
+    :root {
+      --bg: #f7f7f5;
+      --surface: #ffffff;
+      --text: #20242b;
+      --muted: #6a7079;
+      --rule: #e7e7e4;
+      --accent: #0b5fb0;
+      --accent-soft: #e8f1fa;
+      --selected: #fff8e6;
+      --shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+      --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: var(--sans);
+      font-size: 15px;
+      line-height: 1.5;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    a { color: var(--accent); }
+    a:hover { text-decoration: none; }
+
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--rule);
+      padding: 1rem 1.25rem;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      box-shadow: var(--shadow);
+    }
+
+    header h1 {
+      margin: 0 0 0.35rem;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+
+    header p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
+      margin-top: 0.85rem;
+    }
+
+    .toolbar label {
+      font-size: 0.85rem;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    select, input[type="search"], input[type="file"], button {
+      font: inherit;
+      border: 1px solid var(--rule);
+      border-radius: 6px;
+      padding: 0.45rem 0.65rem;
+      background: var(--surface);
+      color: var(--text);
+    }
+
+    select, input[type="search"] { min-width: 14rem; }
+
+    input[type="search"] { flex: 1 1 12rem; max-width: 28rem; }
+
+    button {
+      cursor: pointer;
+      background: var(--surface);
+    }
+
+    button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+
+    button.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    button.primary:hover:not(:disabled) {
+      background: #094d8c;
+      border-color: #094d8c;
+      color: #fff;
+    }
+
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .status {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .status.error { color: #b42318; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(220px, 280px) 1fr;
+      gap: 0;
+      min-height: calc(100vh - 120px);
+    }
+
+    @media (max-width: 800px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { border-right: none; border-bottom: 1px solid var(--rule); max-height: 220px; }
+    }
+
+    .sidebar {
+      background: var(--surface);
+      border-right: 1px solid var(--rule);
+      overflow: auto;
+      padding: 0.75rem;
+    }
+
+    .sidebar h2 {
+      margin: 0 0 0.5rem;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+    }
+
+    .topic-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .topic-list button {
+      width: 100%;
+      text-align: left;
+      border: none;
+      background: transparent;
+      padding: 0.5rem 0.6rem;
+      border-radius: 6px;
+      line-height: 1.35;
+    }
+
+    .topic-list button:hover { background: var(--accent-soft); }
+
+    .topic-list button.active {
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .topic-count {
+      display: block;
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-weight: 400;
+    }
+
+    main {
+      padding: 1rem 1.25rem 5rem;
+      overflow: auto;
+    }
+
+    .topic-heading {
+      margin: 0 0 1rem;
+      font-size: 1.1rem;
+    }
+
+    .list-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .papers { display: grid; gap: 0.85rem; }
+
+    .paper {
+      background: var(--surface);
+      border: 1px solid var(--rule);
+      border-radius: 8px;
+      padding: 0.85rem 1rem;
+      box-shadow: var(--shadow);
+    }
+
+    .paper.selected { background: var(--selected); border-color: #e8c96a; }
+
+    .paper-head {
+      display: flex;
+      gap: 0.65rem;
+      align-items: flex-start;
+    }
+
+    .paper-head input[type="checkbox"] {
+      margin-top: 0.35rem;
+      width: 1rem;
+      height: 1rem;
+      flex-shrink: 0;
+    }
+
+    .paper-title {
+      margin: 0;
+      font-size: 1rem;
+      line-height: 1.35;
+    }
+
+    .paper-meta {
+      margin: 0.35rem 0 0.5rem;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .paper-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.65rem;
+      font-size: 0.85rem;
+      margin-bottom: 0.65rem;
+    }
+
+    .paper-links a {
+      text-decoration: none;
+      padding: 0.15rem 0.45rem;
+      border: 1px solid var(--rule);
+      border-radius: 4px;
+      background: var(--bg);
+    }
+
+    .paper-links a:hover { border-color: var(--accent); }
+
+    .abstract {
+      margin: 0;
+      font-size: 0.92rem;
+      color: #333;
+      white-space: pre-wrap;
+    }
+
+    .empty, .loading {
+      color: var(--muted);
+      padding: 2rem 0;
+      text-align: center;
+    }
+
+    .export-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--surface);
+      border-top: 1px solid var(--rule);
+      padding: 0.75rem 1.25rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .export-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .load-panel {
+      background: var(--surface);
+      border: 1px dashed var(--rule);
+      border-radius: 8px;
+      padding: 2rem;
+      margin: 2rem auto;
+      max-width: 36rem;
+      text-align: center;
+    }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>CVPR 2026 Papers by Topic</h1>
+    <p>Browse papers grouped by topic, select favorites, and export as JSON or BibTeX.</p>
+    <div class="toolbar hidden" id="toolbar">
+      <label for="topicFilter">Filter topics</label>
+      <input type="search" id="topicFilter" placeholder="Search topics…" autocomplete="off">
+      <span class="status" id="dataStatus"></span>
+    </div>
+  </header>
+
+  <div class="load-panel" id="loadPanel">
+    <p id="loadMessage">Loading <code>cvpr2026_papers_by_topic.json</code>…</p>
+    <p class="status">If auto-load fails (e.g. opened as a local file), pick the JSON file:</p>
+    <input type="file" id="fileInput" accept=".json,application/json">
+  </div>
+
+  <div class="layout hidden" id="app">
+    <aside class="sidebar">
+      <h2>Topics</h2>
+      <ul class="topic-list" id="topicList"></ul>
+    </aside>
+    <main>
+      <h2 class="topic-heading" id="topicHeading">Select a topic</h2>
+      <div class="list-actions hidden" id="listActions">
+        <button type="button" id="selectAllBtn">Select all (visible)</button>
+        <button type="button" id="clearVisibleBtn">Clear (visible)</button>
+        <button type="button" id="clearAllBtn">Clear all selections</button>
+        <label for="paperFilter">Filter papers</label>
+        <input type="search" id="paperFilter" placeholder="Search title, authors, abstract…" autocomplete="off">
+        <span class="status" id="paperCount"></span>
+      </div>
+      <div class="papers" id="papers"></div>
+      <p class="empty hidden" id="noPapers">No papers match your filter.</p>
+    </main>
+  </div>
+
+  <div class="export-bar hidden" id="exportBar">
+    <span class="status" id="selectionStatus">0 papers selected</span>
+    <div class="export-actions">
+      <button type="button" class="primary" id="exportJsonBtn" disabled>Export JSON</button>
+      <button type="button" class="primary" id="exportBibBtn" disabled>Export BibTeX</button>
+    </div>
+  </div>
+
+  <script>
+    const DATA_FILE = "cvpr2026_papers_by_topic.json";
+    const EXPORT_JSON = "cvpr2026_selected_papers.json";
+    const EXPORT_BIB = "cvpr2026_selected_papers.bib";
+    const CVPR_YEAR = 2026;
+    const BOOKTITLE_MAIN =
+      "Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)";
+    const BOOKTITLE_FINDINGS =
+      "Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) Findings";
+
+    let byTopic = null;
+    let currentTopic = null;
+    let selected = new Map();
+
+    const loadPanel = document.getElementById("loadPanel");
+    const loadMessage = document.getElementById("loadMessage");
+    const fileInput = document.getElementById("fileInput");
+    const toolbar = document.getElementById("toolbar");
+    const app = document.getElementById("app");
+    const exportBar = document.getElementById("exportBar");
+    const dataStatus = document.getElementById("dataStatus");
+    const topicList = document.getElementById("topicList");
+    const topicFilter = document.getElementById("topicFilter");
+    const topicHeading = document.getElementById("topicHeading");
+    const listActions = document.getElementById("listActions");
+    const papersEl = document.getElementById("papers");
+    const noPapers = document.getElementById("noPapers");
+    const paperFilter = document.getElementById("paperFilter");
+    const paperCount = document.getElementById("paperCount");
+    const selectionStatus = document.getElementById("selectionStatus");
+    const exportJsonBtn = document.getElementById("exportJsonBtn");
+    const exportBibBtn = document.getElementById("exportBibBtn");
+
+    function paperKey(paper) {
+      return (paper.url_abs || paper.link || paper.title) + "\0" + paper.title;
+    }
+
+    function escapeHtml(text) {
+      return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function linkify(text) {
+      const escaped = escapeHtml(text || "");
+      return escaped.replace(
+        /(https?:\/\/[^\s<>"')\],]+)/g,
+        '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
+      );
+    }
+
+    function formatAuthors(authors) {
+      if (!authors || !authors.length) return "";
+      if (authors.length <= 4) return authors.join(", ");
+      return authors.slice(0, 4).join(", ") + " et al.";
+    }
+
+    function totalPapers() {
+      return Object.values(byTopic).reduce((n, arr) => n + arr.length, 0);
+    }
+
+    function updateSelectionUI() {
+      const n = selected.size;
+      selectionStatus.textContent =
+        n === 1 ? "1 paper selected" : `${n} papers selected`;
+      exportJsonBtn.disabled = n === 0;
+      exportBibBtn.disabled = n === 0;
+    }
+
+    function downloadText(content, filename, mimeType) {
+      const blob = new Blob([content], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function bibEscape(value) {
+      return String(value || "")
+        .replace(/\\/g, "\\\\")
+        .replace(/[{}]/g, (ch) => "{" + ch + "}")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function authorLastName(full) {
+      const parts = full.trim().split(/\s+/);
+      return parts.length ? parts[parts.length - 1] : full;
+    }
+
+    function formatBibAuthor(full) {
+      const parts = full.trim().split(/\s+/);
+      if (parts.length <= 1) return bibEscape(full);
+      const last = parts.pop();
+      return bibEscape(last + ", " + parts.join(" "));
+    }
+
+    function formatBibAuthors(authors) {
+      if (!authors || !authors.length) return "";
+      return authors.map(formatBibAuthor).join(" and ");
+    }
+
+    function bibTitleKey(title) {
+      const words = title
+        .replace(/[^a-zA-Z0-9\s]/g, " ")
+        .split(/\s+/)
+        .filter((w) => w.length > 2 && !/^(the|and|for|with|from|via|towards)$/i.test(w));
+      return (words[0] || "paper").toLowerCase().replace(/[^a-z0-9]/g, "");
+    }
+
+    function makeBibKey(paper, used) {
+      const authors = paper.authors || [];
+      const last = authors.length
+        ? authorLastName(authors[0]).toLowerCase().replace(/[^a-z]/g, "")
+        : "unknown";
+      const word = bibTitleKey(paper.title);
+      let base = `${last}${CVPR_YEAR}${word}`.replace(/[^a-z0-9]/g, "");
+      if (!base) base = "paper";
+      let key = base;
+      let i = 2;
+      while (used.has(key)) {
+        key = `${base}${i++}`;
+      }
+      used.add(key);
+      return key;
+    }
+
+    function paperToBibtex(paper, key) {
+      const track = (paper.track || "main").toLowerCase();
+      const booktitle = track === "findings" ? BOOKTITLE_FINDINGS : BOOKTITLE_MAIN;
+      const lines = [
+        `@inproceedings{${key},`,
+        `  title = {${bibEscape(paper.title)}},`,
+        `  author = {${formatBibAuthors(paper.authors)}},`,
+        `  booktitle = {${bibEscape(booktitle)}},`,
+        `  year = {${CVPR_YEAR}},`,
+      ];
+
+      const url = paper.url_abs || paper.link;
+      if (url) lines.push(`  url = {${bibEscape(url)}},`);
+      if (paper.url_pdf) lines.push(`  pdf = {${bibEscape(paper.url_pdf)}},`);
+      if (paper.abstract) lines.push(`  abstract = {${bibEscape(paper.abstract)}},`);
+      if (paper.keywords && paper.keywords.length) {
+        lines.push(`  keywords = {${bibEscape(paper.keywords.join(", "))}},`);
+      }
+      if (paper.arxiv_id) {
+        lines.push(`  eprint = {${bibEscape(paper.arxiv_id)}},`);
+        lines.push(`  archiveprefix = {arXiv},`);
+      }
+
+      lines.push("}");
+      return lines.join("\n");
+    }
+
+    function selectedToBibtex() {
+      const used = new Set();
+      return Array.from(selected.values())
+        .map(({ paper }) => paperToBibtex(paper, makeBibKey(paper, used)))
+        .join("\n\n");
+    }
+
+    function setSelected(paper, topic, checked) {
+      const key = paperKey(paper);
+      if (checked) {
+        selected.set(key, { topic, paper: structuredClone(paper) });
+      } else {
+        selected.delete(key);
+      }
+      updateSelectionUI();
+    }
+
+    function initData(data) {
+      byTopic = data;
+      loadPanel.classList.add("hidden");
+      toolbar.classList.remove("hidden");
+      app.classList.remove("hidden");
+      exportBar.classList.remove("hidden");
+
+      const topics = Object.keys(byTopic).sort((a, b) => a.localeCompare(b));
+      dataStatus.textContent = `${topics.length} topics · ${totalPapers()} papers`;
+
+      renderTopicList(topics);
+      if (topics.length) selectTopic(topics[0]);
+      updateSelectionUI();
+    }
+
+    function renderTopicList(topics) {
+      const q = topicFilter.value.trim().toLowerCase();
+      topicList.innerHTML = "";
+      const filtered = topics.filter((t) => !q || t.toLowerCase().includes(q));
+
+      if (!filtered.length) {
+        topicList.innerHTML = '<li class="status">No topics match.</li>';
+        return;
+      }
+
+      for (const topic of filtered) {
+        const li = document.createElement("li");
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.dataset.topic = topic;
+        btn.className = topic === currentTopic ? "active" : "";
+        btn.innerHTML =
+          escapeHtml(topic) +
+          `<span class="topic-count">${byTopic[topic].length} papers</span>`;
+        btn.addEventListener("click", () => selectTopic(topic));
+        li.appendChild(btn);
+        topicList.appendChild(li);
+      }
+    }
+
+    function selectTopic(topic) {
+      currentTopic = topic;
+      paperFilter.value = "";
+      topicHeading.textContent = topic;
+      listActions.classList.remove("hidden");
+
+      for (const btn of topicList.querySelectorAll("button")) {
+        btn.classList.toggle("active", btn.dataset.topic === topic);
+      }
+
+      renderPapers();
+    }
+
+    function filterPapers(papers) {
+      const q = paperFilter.value.trim().toLowerCase();
+      if (!q) return papers;
+      return papers.filter((p) => {
+        const blob = [
+          p.title,
+          p.abstract,
+          (p.authors || []).join(" "),
+          p.track,
+          (p.keywords || []).join(" "),
+        ]
+          .join(" ")
+          .toLowerCase();
+        return blob.includes(q);
+      });
+    }
+
+    function renderPapers() {
+      if (!currentTopic) return;
+      const all = byTopic[currentTopic] || [];
+      const visible = filterPapers(all);
+
+      paperCount.textContent =
+        visible.length === all.length
+          ? `${all.length} papers`
+          : `${visible.length} of ${all.length} papers`;
+
+      papersEl.innerHTML = "";
+      noPapers.classList.toggle("hidden", visible.length > 0);
+
+      for (const paper of visible) {
+        const key = paperKey(paper);
+        const isSelected = selected.has(key);
+        const card = document.createElement("article");
+        card.className = "paper" + (isSelected ? " selected" : "");
+
+        const absUrl = paper.url_abs || paper.link;
+        const pdfUrl = paper.url_pdf;
+        const track = paper.track ? paper.track : "";
+
+        card.innerHTML = `
+          <div class="paper-head">
+            <input type="checkbox" aria-label="Select paper" ${isSelected ? "checked" : ""}>
+            <div style="min-width:0">
+              <h3 class="paper-title">
+                ${absUrl
+                  ? `<a href="${escapeHtml(absUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(paper.title)}</a>`
+                  : escapeHtml(paper.title)}
+              </h3>
+              <p class="paper-meta">
+                ${escapeHtml(formatAuthors(paper.authors))}
+                ${track ? ` · <span>${escapeHtml(track)}</span>` : ""}
+              </p>
+              <div class="paper-links">
+                ${absUrl ? `<a href="${escapeHtml(absUrl)}" target="_blank" rel="noopener noreferrer">Abstract page</a>` : ""}
+                ${pdfUrl ? `<a href="${escapeHtml(pdfUrl)}" target="_blank" rel="noopener noreferrer">PDF</a>` : ""}
+              </div>
+              <p class="abstract">${linkify(paper.abstract || "(No abstract)")}</p>
+            </div>
+          </div>`;
+
+        const cb = card.querySelector('input[type="checkbox"]');
+        cb.addEventListener("change", () => {
+          setSelected(paper, currentTopic, cb.checked);
+          card.classList.toggle("selected", cb.checked);
+        });
+
+        papersEl.appendChild(card);
+      }
+    }
+
+    function exportSelectedJson() {
+      const payload = Array.from(selected.values()).map(({ topic, paper }) => ({
+        topic,
+        ...paper,
+      }));
+      downloadText(
+        JSON.stringify(payload, null, 2),
+        EXPORT_JSON,
+        "application/json"
+      );
+    }
+
+    function exportSelectedBibtex() {
+      downloadText(selectedToBibtex(), EXPORT_BIB, "application/x-bibtex");
+    }
+
+    async function tryFetch() {
+      try {
+        const res = await fetch(DATA_FILE);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return await res.json();
+      } catch (err) {
+        loadMessage.textContent =
+          "Could not auto-load the JSON file. Pick it below, or run a local server:";
+        loadMessage.innerHTML +=
+          ' <code style="display:block;margin-top:0.5rem">py -m http.server 8000</code>';
+        return null;
+      }
+    }
+
+    fileInput.addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        initData(JSON.parse(text));
+      } catch (err) {
+        loadMessage.textContent = "Failed to parse JSON: " + err.message;
+        loadMessage.classList.add("error");
+      }
+    });
+
+    topicFilter.addEventListener("input", () => {
+      if (byTopic) renderTopicList(Object.keys(byTopic).sort((a, b) => a.localeCompare(b)));
+    });
+
+    paperFilter.addEventListener("input", renderPapers);
+
+    document.getElementById("selectAllBtn").addEventListener("click", () => {
+      if (!currentTopic) return;
+      for (const paper of filterPapers(byTopic[currentTopic])) {
+        setSelected(paper, currentTopic, true);
+      }
+      renderPapers();
+    });
+
+    document.getElementById("clearVisibleBtn").addEventListener("click", () => {
+      if (!currentTopic) return;
+      for (const paper of filterPapers(byTopic[currentTopic])) {
+        setSelected(paper, currentTopic, false);
+      }
+      renderPapers();
+    });
+
+    document.getElementById("clearAllBtn").addEventListener("click", () => {
+      selected.clear();
+      updateSelectionUI();
+      renderPapers();
+    });
+
+    exportJsonBtn.addEventListener("click", exportSelectedJson);
+    exportBibBtn.addEventListener("click", exportSelectedBibtex);
+
+    (async () => {
+      const data = await tryFetch();
+      if (data) initData(data);
+    })();
+  </script>
+</body>
+</html>
