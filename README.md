@@ -54,3 +54,16 @@ embedding model or `k`.
   similarity, not citations or impact.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+
+# About this Fork
+
+Unfortunately, I couldn't reproduce the maps of the original repository and I came up with my own way to group papers by topic. This can be found in `papers_by_topic.py`. Run by:
+
+```bash
+python papers_by_topic.py
+```
+An HTML viewer (`papers_by_topic_viewer.html`) is also provided to browse papers by topic and export selected papers to json or bibtex.
+
+
+🤖 Generated with [Cursor](https://cursor.com/) 
